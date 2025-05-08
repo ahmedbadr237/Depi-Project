@@ -1,6 +1,5 @@
 streamlit
-numpy
-scikit-learn
-pickle
-pandas
 xgboost
+scikit-learn
+pandas
+numpy
