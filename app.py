@@ -1,11 +1,11 @@
 import pickle
 import pandas as pd
 import streamlit as st
-
+import os
 # Load the model and scaler
-model_path = 'models\\xgboost_model.pkl'
-scaler_path = 'models\\scaler.pkl'
-encoder_path = 'models\\label_encoder.pkl'
+model_path = os.path.join('models', 'xgboost_model.pkl')
+scaler_path = os.path.join('models', 'scaler.pkl')
+encoder_path = os.path.join('models', 'label_encoder.pkl')
 model = pickle.load(open(model_path, 'rb'))
 scaler = pickle.load(open(scaler_path, 'rb'))
 encoder = pickle.load(open(encoder_path, 'rb'))
