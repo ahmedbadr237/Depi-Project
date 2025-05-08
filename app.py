@@ -1,7 +1,6 @@
 import pickle
 import pandas as pd
 import streamlit as st
-from xgboost import XGBRegressor
 
 # Load the model and scaler
 model_path = 'models\\xgboost_model.pkl'
