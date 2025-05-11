@@ -40,7 +40,11 @@ sales_features = ['_StoreID', '_ProductID', 'Order Quantity', 'Discount Applied'
        'Sales Channel_In-Store', 'Sales Channel_Online',
        'Sales Channel_Wholesale']
 
-history_data = pd.read_csv(r"notebooks\Data\history_features.csv")
+file_path = "notebooks/Data/history_features.csv"
+if os.path.exists(file_path):
+    history_data = pd.read_csv(file_path)
+else:
+    st.error(f"File not found: {file_path}")
 
 # Check sales range in history data
 def get_historical_values(store_id, product_id, order_date):
