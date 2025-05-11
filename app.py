@@ -59,6 +59,7 @@ sales_features = ['_StoreID', '_ProductID', 'Order Quantity', 'Discount Applied'
        'Sales Channel_In-Store', 'Sales Channel_Online',
        'Sales Channel_Wholesale']
 
+<<<<<<< HEAD
 # ──────────────────────────────────────────────────────────────
 # 6. LOAD HISTORICAL DATA
 # ──────────────────────────────────────────────────────────────
@@ -66,6 +67,13 @@ if os.path.exists(DATA_PATH):
     history_data = pd.read_csv(DATA_PATH)
 else:
     st.error(f"File not found: {DATA_PATH}")
+=======
+file_path = "notebooks/Data/history_features.csv"
+if os.path.exists(file_path):
+    history_data = pd.read_csv(file_path)
+else:
+    st.error(f"File not found: {file_path}")
+>>>>>>> deb65ed132691c6c74c95f9d4661f25ac770ce53
 
 # ──────────────────────────────────────────────────────────────
 # 7. FUNCTION TO EXTRACT HISTORICAL STATS
