@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator
 
 # ──────────────────────────────────────────────────────────────
 # 2. MODEL WRAPPER CLASS
-# ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────
 class TreeBasedModels(BaseEstimator):
     def __init__(self, model=None):
         self.model = model
@@ -34,7 +34,7 @@ ENCODER_PATH = os.path.join(MODEL_DIR, 'sales_channel_encoder.pkl')
 
 # ──────────────────────────────────────────────────────────────
 # 4. LOAD MODELS AND ENCODER
-# ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────
 demand_model = pickle.load(open(DEMAND_MODEL_PATH, 'rb'))
 sales_model = pickle.load(open(SALES_MODEL_PATH, 'rb'))
 encoder = pickle.load(open(ENCODER_PATH, 'rb'))
@@ -80,23 +80,60 @@ def get_historical_values(store_id: int, product_id: int, order_date: str) -> di
 
     if mask.any():
         recent = history_data[mask].sort_values('OrderDate', ascending=False)
-        values = recent['Order Quantity'].head(30)
-        return {
-            'last_value': values.iloc[0],
-            'rolling_mean': values.mean(),
-            'rolling_std': values.std(),
-            'rolling_min': values.min(),
-            'rolling_max': values.max()
-        }
+        values = recent['Order Quantity']
+        
+        # Calculate proper lags
+        lags = {f'lag_{i}': values.iloc[i-1] if i-1 < len(values) else values.median() 
+                for i in range(1, 6)}
+        
+        # Calculate proper rolling statistics for each window
+        rolling_stats = {}
+        for window in [7, 14, 30]:
+            window_data = values.head(window)
+            rolling_stats.update({
+                f'rolling_mean_{window}': window_data.mean(),
+                f'rolling_std_{window}': window_data.std(),
+                f'rolling_min_{window}': window_data.min(),
+                f'rolling_max_{window}': window_data.max()
+            })
+        
+        # Calculate proper EWM statistics
+        ewm_stats = {}
+        for window in [7, 14, 30]:
+            span = window
+            window_data = values.head(window)
+            ewm_obj = window_data.ewm(span=span)
+            ewm_stats.update({
+                f'ewm_mean_{window}': ewm_obj.mean().iloc[-1],
+                f'ewm_std_{window}': ewm_obj.std().iloc[-1]
+            })
+        
+        # Calculate diff
+        diff_1 = values.iloc[0] - values.iloc[1] if len(values) > 1 else 0
+        
+        return {**lags, **rolling_stats, **ewm_stats, 'diff_1': diff_1}
     else:
+        # Fallback values using global statistics
+        default_stats = {}
         values = history_data['Order Quantity']
-        return {
-            'last_value': values.median(),
-            'rolling_mean': values.mean(),
-            'rolling_std': values.std(),
-            'rolling_min': values.min(),
-            'rolling_max': values.max()
-        }
+        
+        # Default lags
+        for i in range(1, 6):
+            default_stats[f'lag_{i}'] = values.median()
+        
+        # Default rolling and ewm stats
+        for window in [7, 14, 30]:
+            default_stats.update({
+                f'rolling_mean_{window}': values.mean(),
+                f'rolling_std_{window}': values.std(),
+                f'rolling_min_{window}': values.min(),
+                f'rolling_max_{window}': values.max(),
+                f'ewm_mean_{window}': values.ewm(span=window).mean().iloc[-1],
+                f'ewm_std_{window}': values.ewm(span=window).std().iloc[-1]
+            })
+        
+        default_stats['diff_1'] = 0
+        return default_stats
 
 # ──────────────────────────────────────────────────────────────
 # 8. STREAMLIT STYLING
@@ -124,14 +161,13 @@ with col1:
     sales_channel = st.selectbox("Sales Channel", ['In-Store', 'Online', 'Distributor', 'Wholesale'])
     store_id = st.number_input("Store ID", min_value=1, max_value=367, value=1, step=1)
     order_date = st.date_input("Order Date", value=pd.to_datetime("2023-01-01"))
-    product_id = st.number_input("Product ID", min_value=1, max_value=47, value=1, step=1)
 
 with col2:
     unit_cost = st.number_input("Unit Cost", value=0)
     unit_price = st.number_input("Unit Price", value=0)
-    discount_percentage = st.number_input("Discount Percentage", value=0.0, step=0.01, format="%.2f")
     discount_applied = st.number_input("Discount Applied", value=0.0, step=0.01, format="%.2f")
 
+product_id = st.number_input("Product ID", min_value=1, max_value=47, value=1, step=1)
 # ──────────────────────────────────────────────────────────────
 # 10. PREDICTION PIPELINE
 # ──────────────────────────────────────────────────────────────
@@ -157,20 +193,12 @@ if st.button("Predict Demand and Sales", type="primary"):
         # Demand input with historical features
         demand_input = base_data.copy()
         demand_input['Unit Cost'] = unit_cost
-        hist = get_historical_values(store_id, product_id, order_date)
+        hist_features = get_historical_values(store_id, product_id, order_date)
 
-        for i in range(1, 6):
-            demand_input[f'lag_{i}'] = hist['last_value']
+        # Add all historical features at once
+        for feature_name, value in hist_features.items():
+            demand_input[feature_name] = value
 
-        for window in [7, 14, 30]:
-            demand_input[f'rolling_mean_{window}'] = hist['rolling_mean']
-            demand_input[f'rolling_std_{window}'] = hist['rolling_std']
-            demand_input[f'rolling_min_{window}'] = hist['rolling_min']
-            demand_input[f'rolling_max_{window}'] = hist['rolling_max']
-            demand_input[f'ewm_mean_{window}'] = hist['rolling_mean']
-            demand_input[f'ewm_std_{window}'] = hist['rolling_std']
-
-        demand_input['diff_1'] = hist['last_value'] - hist['rolling_mean']
         demand_input = demand_input[demand_features]
 
         # Predict demand
