@@ -154,7 +154,7 @@ st.markdown("""
 col1, col2 = st.columns(2)
 with col1:
     sales_channel = st.selectbox("Sales Channel", ['In-Store', 'Online', 'Distributor', 'Wholesale'])
-    store_id = st.number_input("Store ID", min_value=1, max_value=367, value=1, step=1)
+    store_id = st.selectbox("Store ID", [i for i in range(1,368)])
     order_date = st.date_input("Order Date", value=pd.to_datetime("2023-01-01"))
 
 with col2:
@@ -162,7 +162,7 @@ with col2:
     unit_price = st.number_input("Unit Price", value=1500)
     discount_applied = st.number_input("Discount Applied", value=0.0, step=0.01, format="%.2f")
 
-product_id = st.number_input("Product ID", min_value=1, max_value=47, value=1, step=1)
+product_id = st.selectbox("Product ID",[i for i in range(1,48)])
 # ──────────────────────────────────────────────────────────────
 # 10. PREDICTION PIPELINE
 # ──────────────────────────────────────────────────────────────
