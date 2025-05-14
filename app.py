@@ -6,12 +6,10 @@ import pickle
 import numpy as np
 import pandas as pd
 import streamlit as st
-from sklearn.base import BaseEstimator
-
 # ──────────────────────────────────────────────────────────────
 # 2. MODEL WRAPPER CLASS
 # ──────────────────────────────────────────────
-class TreeBasedModels(BaseEstimator):
+class TreeBasedModels:
     def __init__(self, model=None):
         self.model = model
     def predict(self, X):
