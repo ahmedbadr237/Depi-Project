@@ -14,11 +14,6 @@ from sklearn.base import BaseEstimator
 class TreeBasedModels(BaseEstimator):
     def __init__(self, model=None):
         self.model = model
-
-    def fit(self, X, y):
-        self.model.fit(X, y)
-        return self
-
     def predict(self, X):
         return self.model.predict(X)
 
@@ -163,8 +158,8 @@ with col1:
     order_date = st.date_input("Order Date", value=pd.to_datetime("2023-01-01"))
 
 with col2:
-    unit_cost = st.number_input("Unit Cost", value=0)
-    unit_price = st.number_input("Unit Price", value=0)
+    unit_cost = st.number_input("Unit Cost", value=1000)
+    unit_price = st.number_input("Unit Price", value=1500)
     discount_applied = st.number_input("Discount Applied", value=0.0, step=0.01, format="%.2f")
 
 product_id = st.number_input("Product ID", min_value=1, max_value=47, value=1, step=1)
