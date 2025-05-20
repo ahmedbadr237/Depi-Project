@@ -151,11 +151,7 @@ st.markdown("""
 # ──────────────────────────────────────────────────────────────
 col1, col2 = st.columns(2)
 with col1:
-<<<<<<< HEAD
     sales_channel = st.selectbox("Sales Channel", ['In-Store', 'Online', 'Wholesale','Distributor'])
-=======
-    sales_channel = st.selectbox("Sales Channel", ['In-Store', 'Online', 'Wholesale','Distributed])
->>>>>>> e27391dcc38db1d305667b3e790795770db1c213
     store_id = st.selectbox("Store ID", [i for i in range(1,368)])
     order_date = st.date_input("Order Date", value=pd.to_datetime("2023-01-01"))
 
